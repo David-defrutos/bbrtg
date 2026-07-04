@@ -1,1 +1,75 @@
 ﻿# changelog Blood Bowl: Rise to Glory
+
+---
+2026-07-04 22:48 · #4 — Fase 4: UI wizard completa (creación + plan + ficha)
+Causa: aplicación sin interfaz; solo existía el motor puro.
+Arreglo: 7 componentes Vue + 2 Pinia stores completos.
+  Stores:
+    - character.ts: estado del PJ (persistido) + wizardDraft (transient), stateAt(n),
+      setLevelDelta, removeLevelEntry, setNivelActual, export/import JSON, reset.
+    - ui.ts: WizardStep, nivelVista, navegación next/back/goTo.
+  Componentes:
+    - StepInicio.vue: pantalla de bienvenida, nombre, continuar, importar JSON.
+    - StepRaza.vue: grid de 8 razas con maxima y dote racial.
+    - StepAtributos.vue: chip-select para repartir INITIAL_ATTRS entre 6 atributos.
+    - StepHabilidades.vue: chip-select para repartir INITIAL_SKILLS entre 6 habilidades.
+    - StepDotes.vue: lista filtrada de dotes (prereqs contra estado inicial), buscador.
+    - StepDios.vue: grid de 8 dioses (skippable), llama commitLevel1().
+    - StepPlan.vue: tabla de 30 filas con dropdowns inline (habilidad/atributo/dote/dios),
+      banner de validación, panel lateral con stats a nivelVista, "Jugar aquí".
+  App.vue: shell con header (breadcrumbs, toggle de tema), renderizado condicional por paso.
+  style.css: base dark/light, scrollbar, select option colors.
+Fix build: @reference "../style.css" en todos los <style scoped> con @apply (Tailwind v4).
+Fix TS: variables no usadas (i, selected, computed) en StepRaza/App; array-index undefined
+  en needsGodChoice (añadido ?? null).
+Ficheros tocados: src/main.ts, src/App.vue, src/style.css, src/stores/character.ts,
+  src/stores/ui.ts, src/components/StepInicio.vue (nuevo), StepRaza.vue (nuevo),
+  StepAtributos.vue (nuevo), StepHabilidades.vue (nuevo), StepDotes.vue (nuevo),
+  StepDios.vue (nuevo), StepPlan.vue (nuevo).
+Tests: 31 / 31 verdes.
+
+---
+2026-07-04 22:18 · #3 — Fase 3: motor puro (fold, replanDesde, validatePlan) + 31 tests
+Causa: motor ausente; la app no podía calcular ni validar ningún estado de PJ.
+Arreglo: creados src/rules/helpers.ts, engine.ts, validate.ts.
+  - helpers.ts: getLevelCap, getMaxAttrBase, getMaxSkill, getCalendarEntry,
+    expectedFeatCount, checkPrereq, unmetPrereqs.
+  - engine.ts: fold(plan, n, raza) — operación central determinista;
+    replanDesde(plan, n) — descarta entradas nivel >= n.
+  - validate.ts: validatePlan — comprueba distribución inicial, mínimos raciales,
+    caps de atributo y habilidad, calendario de dotes y prerequisitos.
+    Regla de oro: señalar y describir, nunca clampar en silencio.
+Fix TS: getLevelCap usaba indexado de array que en strict mode es T|undefined;
+  reescrito con bucle + cast explícito en fallback.
+Ficheros tocados: src/rules/helpers.ts (nuevo), src/rules/engine.ts (nuevo),
+  src/rules/validate.ts (nuevo), src/rules/engine.test.ts (nuevo).
+Tests: 31 / 31 verdes.
+
+---
+2026-07-04 20:45 · #2 — Fase 2: catálogos RACES, GODS y FEATS (v0.30)
+Causa: arrays vacíos en races.ts, gods.ts, feats.ts tras Fase 1.
+Arreglo: poblados los tres catálogos con los datos reales del manual v0.30.
+  - races.ts: 8 razas (Humano, Orco, Enano, Skaven, Elfo, Goblin, Hombre bestia, No muerto)
+    con minima, maxima (todas suman 54) y startingFeatId.
+  - gods.ts: 8 dioses (Khorne, Nurgle, Tzeentch, Slaanesh, Sigmar, Shallya, Ranald, Taal/Rhya)
+    con rezarAttrs, rezarSkill y domains.
+  - feats.ts: tipo FeatPrereq extendido a unión FeatPrereqCond | FeatPrereqCond[] para
+    soportar condiciones OR (p. ej. "Mente 5 o Voluntad 3"). 64 dotes completas:
+    12 cadenas de 4 (Apoyo, Placaje pesado, Defensa posicional, Evasión, Retener, Sprint,
+    Recibir/recoger, Pase, Robar balón, Trampas, Carga, Resistencia), Iniciativa (1),
+    Soporte (3), Tramposo (4), Devoción (5) y Politeísmo (3).
+    Cada dote incluye prereqs validables, use, effect y limit.
+Ficheros tocados: src/data/races.ts, src/data/gods.ts, src/data/feats.ts.
+Tests: 0 (motor llega en Fase 3).
+
+---
+2026-07-04 20:30 · #1 — Fase 1: estructura src/ y tipos
+Causa: repo vacío, necesita base tipada antes de datos y motor.
+Arreglo: creados src/rules/types.ts (Character, PlanEntry, CharState, ValidationResult),
+  src/data/config.ts (ATTR_DEFS, SKILL_DEFS, arrays iniciales),
+  src/data/tables.ts (ATTR_DICE_TABLE, SKILL_TABLE, LEVEL_CAPS, LEVEL_CALENDAR),
+  src/data/races.ts, feats.ts, gods.ts (tipos + arrays vacíos para Fase 2),
+  src/stores/character.ts, ui.ts (skeletons Pinia),
+  src/App.vue, src/main.ts, src/style.css.
+  index.html y vite.config.ts actualizados (base='/bbrtg/', limpiados refs D&D).
+Tests: 0 (motor no existe todavía — llega en Fase 3).

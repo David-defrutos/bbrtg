@@ -1,0 +1,72 @@
+// Documento generado el 2026-07-04-2030
+import type { Attrs } from '@/rules/types'
+
+export interface RaceData {
+  id: string
+  name: string
+  /** Mínimos raciales (0 para humano, 2 para el resto: un mínimo 4 y un mínimo 3) */
+  minima: Partial<Attrs>
+  /** Máximos raciales naturales — todos suman 54 */
+  maxima: Attrs
+  /** ID de la dote gratuita que recibe esta raza al crear personaje */
+  startingFeatId: string
+}
+
+export const RACES: RaceData[] = [
+  {
+    id: 'humano',
+    name: 'Humano',
+    minima: {},
+    maxima: { mov: 9, fue: 9, agi: 9, tec: 9, res: 9, men: 9 },
+    startingFeatId: 'trabajo-en-equipo',
+  },
+  {
+    id: 'orco',
+    name: 'Orco',
+    minima: { fue: 4, res: 3 },
+    maxima: { mov: 7, fue: 12, agi: 7, tec: 7, res: 12, men: 9 },
+    startingFeatId: 'placaje-pesado',
+  },
+  {
+    id: 'enano',
+    name: 'Enano',
+    minima: { res: 4, fue: 3 },
+    maxima: { mov: 6, fue: 10, agi: 7, tec: 8, res: 12, men: 11 },
+    startingFeatId: 'no-me-muevo',
+  },
+  {
+    id: 'skaven',
+    name: 'Skaven',
+    minima: { mov: 4, agi: 3 },
+    maxima: { mov: 12, fue: 6, agi: 12, tec: 10, res: 6, men: 8 },
+    startingFeatId: 'escurridizo',
+  },
+  {
+    id: 'elfo',
+    name: 'Elfo',
+    minima: { tec: 4, agi: 3 },
+    maxima: { mov: 9, fue: 6, agi: 12, tec: 12, res: 6, men: 9 },
+    startingFeatId: 'manos-finas',
+  },
+  {
+    id: 'goblin',
+    name: 'Goblin',
+    minima: { agi: 4, tec: 3 },
+    maxima: { mov: 10, fue: 5, agi: 12, tec: 11, res: 5, men: 11 },
+    startingFeatId: 'trampero',
+  },
+  {
+    id: 'hombre-bestia',
+    name: 'Hombre bestia',
+    minima: { fue: 4, mov: 3 },
+    maxima: { mov: 10, fue: 12, agi: 8, tec: 6, res: 11, men: 7 },
+    startingFeatId: 'cornada',
+  },
+  {
+    id: 'no-muerto',
+    name: 'No muerto',
+    minima: { res: 4, men: 3 },
+    maxima: { mov: 6, fue: 10, agi: 6, tec: 8, res: 12, men: 12 },
+    startingFeatId: 'no-siente-dolor',
+  },
+]
