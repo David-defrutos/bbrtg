@@ -44,6 +44,9 @@ export interface Character {
   raza: string
   plan: PlanEntry[]            // plan[0] es siempre Level1Delta; plan[i].nivel === i+1
   nivelActual: number          // cursor 1..30 (nivel al que se juega de verdad)
+  /** IDs del catálogo de equipo (src/data/equipment.ts). Editable en cualquier momento;
+   *  NO forma parte del plan: el atributo efectivo (base + objetos) es derivado. */
+  equipo?: string[]
   notas: string
 }
 

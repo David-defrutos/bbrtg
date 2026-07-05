@@ -1,30 +1,33 @@
 <script setup lang="ts">
-// Documento generado el 2026-07-04-2230
+// Documento generado el 2026-07-05-0914
 import { ref, computed } from 'vue'
 import { useUiStore } from '@/stores/ui'
 import { useCharacterStore } from '@/stores/character'
 import { SKILL_DEFS, ATTR_DEFS, INITIAL_SKILLS } from '@/data/config'
+import { remainingPool, isValidAssignment } from '@/rules/pool'
 import type { SkillKey, Skills } from '@/rules/types'
 
 const ui   = useUiStore()
 const char = useCharacterStore()
 
-const pool        = ref<number[]>([...INITIAL_SKILLS].sort((a, b) => b - a))
+// Asignaciones: null = sin asignar. En el borrador del store, 0 = sin asignar.
 const assignments = ref<Record<SkillKey, number | null>>({
   correr: null, placar: null, evasion: null, balon: null, aguantar: null, voluntad: null,
 })
-const selectedPoolIdx = ref(-1)
 
-// Inicializar desde borrador si ya había datos
-if (char.wizardDraft.skills) {
-  const vals = Object.values(char.wizardDraft.skills) as number[]
-  if (vals.length === 6) {
-    for (const s of SKILL_DEFS) {
-      assignments.value[s.key] = char.wizardDraft.skills[s.key]
-    }
-    pool.value = []
+// Restaurar del borrador (asignaciones parciales incluidas), solo si es coherente
+{
+  const draft = SKILL_DEFS.map(s => char.wizardDraft.skills[s.key] || null)
+  if (isValidAssignment(INITIAL_SKILLS, draft)) {
+    SKILL_DEFS.forEach((s, i) => { assignments.value[s.key] = draft[i] ?? null })
   }
 }
+
+/** Pool derivado por diferencia multiconjunto: no puede corromperse al reasignar */
+const pool = computed(() =>
+  remainingPool(INITIAL_SKILLS, SKILL_DEFS.map(s => assignments.value[s.key]))
+)
+const selectedPoolIdx = ref(-1)
 
 const allDone = computed(() => SKILL_DEFS.every(s => assignments.value[s.key] !== null))
 
@@ -34,41 +37,40 @@ function attrName(skillKey: SkillKey) {
   return ATTR_DEFS.find(a => a.key === attrKey)?.name ?? ''
 }
 
+/** Cada cambio se persiste en el borrador del wizard (0 = sin asignar) */
+function persistDraft() {
+  const skills = Object.fromEntries(
+    SKILL_DEFS.map(s => [s.key, assignments.value[s.key] ?? 0])
+  ) as Skills
+  char.setWizardSkills(skills)
+}
+
 function pickFromPool(i: number) {
   selectedPoolIdx.value = i === selectedPoolIdx.value ? -1 : i
 }
 
 function assignOrUnassign(key: SkillKey) {
   if (selectedPoolIdx.value >= 0) {
-    const val = pool.value[selectedPoolIdx.value]!
-    const prev = assignments.value[key]
-    if (prev !== null) {
-      pool.value.push(prev)
-      pool.value.sort((a, b) => b - a)
-    }
+    const val = pool.value[selectedPoolIdx.value]
+    if (val === undefined) { selectedPoolIdx.value = -1; return }
     assignments.value[key] = val
-    pool.value.splice(selectedPoolIdx.value, 1)
     selectedPoolIdx.value = -1
   } else if (assignments.value[key] !== null) {
-    pool.value.push(assignments.value[key]!)
-    pool.value.sort((a, b) => b - a)
     assignments.value[key] = null
   }
+  persistDraft()
 }
 
 function siguiente() {
   if (!allDone.value) return
-  const skills = Object.fromEntries(
-    SKILL_DEFS.map(s => [s.key, assignments.value[s.key]!])
-  ) as Skills
-  char.setWizardSkills(skills)
+  persistDraft()
   ui.next()
 }
 
 function reset() {
-  pool.value = [...INITIAL_SKILLS].sort((a, b) => b - a)
   for (const s of SKILL_DEFS) assignments.value[s.key] = null
   selectedPoolIdx.value = -1
+  persistDraft()
 }
 </script>
 
@@ -79,6 +81,7 @@ function reset() {
       <h2 class="text-amber-400 font-bold text-lg">Reparte tus habilidades</h2>
       <p class="text-stone-500 text-sm mt-1">
         Cada habilidad está emparejada con un atributo (se usan juntos en las tiradas).
+        Pasa el ratón por el nombre de cada habilidad para ver qué hace.
       </p>
     </div>
 
@@ -105,7 +108,10 @@ function reset() {
         <div v-for="s in SKILL_DEFS" :key="s.key"
           class="flex items-center gap-4 py-2 border-b border-stone-800/60">
 
-          <span class="w-28 text-stone-300 text-sm">{{ s.name }}</span>
+          <span
+            class="w-28 text-stone-300 text-sm underline decoration-dotted decoration-stone-600 underline-offset-4 cursor-help"
+            :title="s.desc"
+          >{{ s.name }}</span>
 
           <button
             @click="assignOrUnassign(s.key)"

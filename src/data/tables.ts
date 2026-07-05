@@ -52,6 +52,26 @@ export const SKILL_TABLE: SkillRow[] = [
 ]
 
 // ---------------------------------------------------------------------------
+// Tabla de dificultades (manual §4.6): éxitos necesarios por dificultad
+// ---------------------------------------------------------------------------
+
+export interface DifficultyRow {
+  id: string
+  name: string
+  /** Nº de éxitos necesarios para superar la tirada */
+  successes: number
+}
+
+export const DIFFICULTY_TABLE: DifficultyRow[] = [
+  { id: 'facil',       name: 'Fácil',       successes: 1 },
+  { id: 'normal',      name: 'Normal',      successes: 2 },
+  { id: 'dificil',     name: 'Difícil',     successes: 3 },
+  { id: 'muy-dificil', name: 'Muy difícil', successes: 4 },
+  { id: 'legendaria',  name: 'Legendaria',  successes: 5 },
+  { id: 'imposible',   name: 'Imposible',   successes: 6 },
+]
+
+// ---------------------------------------------------------------------------
 // Bandas de máximos por nivel
 // ---------------------------------------------------------------------------
 

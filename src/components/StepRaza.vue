@@ -42,7 +42,11 @@ function siguiente() {
             : 'border-stone-700 bg-stone-900 hover:border-stone-500'"
         >
           <div class="font-semibold text-stone-100 mb-1">{{ raza.name }}</div>
-          <div class="text-xs text-stone-400 mb-2">Dote: {{ featName(raza.startingFeatId) }}</div>
+          <p class="text-xs text-stone-500 mb-2 leading-relaxed">{{ raza.desc }}</p>
+          <div class="text-xs text-stone-400 mb-2"
+            :title="FEATS.find(f => f.id === raza.startingFeatId)?.effect">
+            Dote: <span class="underline decoration-dotted decoration-stone-600 cursor-help">{{ featName(raza.startingFeatId) }}</span>
+          </div>
 
           <!-- Máximos en mini-tabla -->
           <div class="grid grid-cols-3 gap-x-2 text-xs">

@@ -1,32 +1,38 @@
 <script setup lang="ts">
-// Documento generado el 2026-07-04-2230
+// Documento generado el 2026-07-05-0914
 import { ref, computed } from 'vue'
 import { useUiStore } from '@/stores/ui'
 import { useCharacterStore } from '@/stores/character'
 import { ATTR_DEFS, INITIAL_ATTRS } from '@/data/config'
 import { getMaxAttrBase } from '@/rules/helpers'
+import { remainingPool, isValidAssignment } from '@/rules/pool'
 import type { AttrKey, Attrs } from '@/rules/types'
 
 const ui   = useUiStore()
 const char = useCharacterStore()
 
-// Pool y asignaciones
-const pool        = ref<number[]>([...INITIAL_ATTRS].sort((a, b) => b - a))
+// Asignaciones: null = sin asignar. En el borrador del store, 0 = sin asignar.
 const assignments = ref<Record<AttrKey, number | null>>({
   mov: null, fue: null, agi: null, tec: null, res: null, men: null,
 })
-const selectedPoolIdx = ref(-1)
 
-// Inicializar desde el borrador del wizard si ya había datos
-if (char.wizardDraft.attrs) {
-  const vals = Object.values(char.wizardDraft.attrs) as number[]
-  if (vals.every(v => v > 0) && vals.length === 6) {
-    for (const a of ATTR_DEFS) {
-      assignments.value[a.key] = char.wizardDraft.attrs[a.key]
-    }
-    pool.value = []
+// Restaurar del borrador (asignaciones parciales incluidas), solo si es coherente
+{
+  const draft = ATTR_DEFS.map(a => char.wizardDraft.attrs[a.key] || null)
+  if (isValidAssignment(INITIAL_ATTRS, draft)) {
+    ATTR_DEFS.forEach((a, i) => { assignments.value[a.key] = draft[i] ?? null })
   }
 }
+
+/**
+ * El pool disponible se DERIVA de lo asignado (diferencia multiconjunto).
+ * Nunca se muta a mano: al reasignar un slot ocupado, el valor anterior
+ * vuelve al pool automáticamente y no puede perderse ni duplicarse.
+ */
+const pool = computed(() =>
+  remainingPool(INITIAL_ATTRS, ATTR_DEFS.map(a => assignments.value[a.key]))
+)
+const selectedPoolIdx = ref(-1)
 
 const raza    = computed(() => char.raza)
 const allDone = computed(() => ATTR_DEFS.every(a => assignments.value[a.key] !== null))
@@ -39,43 +45,40 @@ function minFor(key: AttrKey) {
   return raza.value?.minima[key] ?? 0
 }
 
+/** Cada cambio se persiste en el borrador del wizard (0 = sin asignar) */
+function persistDraft() {
+  const attrs = Object.fromEntries(
+    ATTR_DEFS.map(a => [a.key, assignments.value[a.key] ?? 0])
+  ) as Attrs
+  char.setWizardAttrs(attrs)
+}
+
 function pickFromPool(i: number) {
   selectedPoolIdx.value = i === selectedPoolIdx.value ? -1 : i
 }
 
 function assignOrUnassign(key: AttrKey) {
   if (selectedPoolIdx.value >= 0) {
-    // Asignar chip seleccionado al slot
-    const val = pool.value[selectedPoolIdx.value]!
-    const prev = assignments.value[key]
-    if (prev !== null) {
-      pool.value.push(prev)
-      pool.value.sort((a, b) => b - a)
-    }
+    const val = pool.value[selectedPoolIdx.value]
+    if (val === undefined) { selectedPoolIdx.value = -1; return }
     assignments.value[key] = val
-    pool.value.splice(selectedPoolIdx.value, 1)
     selectedPoolIdx.value = -1
   } else if (assignments.value[key] !== null) {
-    // Desasignar: devolver al pool
-    pool.value.push(assignments.value[key]!)
-    pool.value.sort((a, b) => b - a)
     assignments.value[key] = null
   }
+  persistDraft()
 }
 
 function siguiente() {
   if (!allDone.value) return
-  const attrs = Object.fromEntries(
-    ATTR_DEFS.map(a => [a.key, assignments.value[a.key]!])
-  ) as Attrs
-  char.setWizardAttrs(attrs)
+  persistDraft()
   ui.next()
 }
 
 function reset() {
-  pool.value = [...INITIAL_ATTRS].sort((a, b) => b - a)
   for (const a of ATTR_DEFS) assignments.value[a.key] = null
   selectedPoolIdx.value = -1
+  persistDraft()
 }
 </script>
 
@@ -86,6 +89,7 @@ function reset() {
       <h2 class="text-amber-400 font-bold text-lg">Reparte tus atributos</h2>
       <p class="text-stone-500 text-sm mt-1">
         Asigna los valores disponibles a los 6 atributos. Haz clic en un valor y luego en un atributo.
+        Pasa el ratón por el nombre de cada atributo para ver qué hace.
       </p>
     </div>
 
@@ -114,7 +118,10 @@ function reset() {
         <div v-for="a in ATTR_DEFS" :key="a.key"
           class="flex items-center gap-4 py-2 border-b border-stone-800/60">
 
-          <span class="w-28 text-stone-300 text-sm">{{ a.name }}</span>
+          <span
+            class="w-28 text-stone-300 text-sm underline decoration-dotted decoration-stone-600 underline-offset-4 cursor-help"
+            :title="a.desc"
+          >{{ a.name }}</span>
 
           <!-- Slot de valor -->
           <button

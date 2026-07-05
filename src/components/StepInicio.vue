@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Documento generado el 2026-07-04-2230
+// Documento generado el 2026-07-05-1655
 import { ref } from 'vue'
 import { useUiStore } from '@/stores/ui'
 import { useCharacterStore } from '@/stores/character'
@@ -9,6 +9,7 @@ const char = useCharacterStore()
 
 const nombre = ref(char.character?.nombre ?? '')
 const importError = ref('')
+const importWarnings = ref<string[]>([])
 
 function crear() {
   if (!nombre.value.trim()) return
@@ -16,20 +17,45 @@ function crear() {
   ui.goTo('raza')
 }
 
+/**
+ * «Nuevo personaje» borra el guardado. Confirmación + copia JSON automática
+ * (el buffer de deshacer no sobrevive a un F5) antes de destruir nada.
+ */
+function nuevoPersonaje() {
+  if (!char.character) return
+  if (!window.confirm(
+    `¿Borrar a «${char.character.nombre}» con todo su plan para empezar de cero?\n` +
+    'Se descargará una copia JSON y podrás deshacer desde el aviso inferior.'
+  )) return
+  char.triggerDownload()
+  char.reset()
+}
+
 function onImport(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file) return
   const reader = new FileReader()
   reader.onload = ev => {
+    importError.value = ''
+    importWarnings.value = []
     try {
-      importError.value = ''
-      char.importJSON(ev.target?.result as string)
-      ui.goTo('plan')
-    } catch {
-      importError.value = 'JSON inválido o formato no reconocido.'
+      const warnings = char.importJSON(ev.target?.result as string)
+      if (warnings.length > 0) {
+        // Señalar antes de continuar: el usuario decide si el personaje le vale
+        importWarnings.value = warnings
+      } else {
+        ui.goTo('plan')
+      }
+    } catch (err) {
+      importError.value = err instanceof Error ? err.message : 'JSON inválido o formato no reconocido.'
     }
   }
   reader.readAsText(file)
+}
+
+function continuarConAvisos() {
+  importWarnings.value = []
+  ui.goTo('plan')
 }
 </script>
 
@@ -50,7 +76,9 @@ function onImport(e: Event) {
         </p>
         <div class="flex gap-2">
           <button @click="ui.goTo('plan')" class="btn-primary flex-1">Continuar</button>
-          <button @click="char.reset()" class="btn-ghost">Nuevo personaje</button>
+          <button @click="nuevoPersonaje"
+            title="Borrar el personaje guardado (con confirmación y copia JSON)"
+            class="btn-ghost">Nuevo personaje</button>
         </div>
       </div>
 
@@ -80,6 +108,16 @@ function onImport(e: Event) {
           <input type="file" accept=".json,.bbrtg.json" @change="onImport" class="sr-only" />
         </label>
         <p v-if="importError" class="text-red-400 text-xs mt-2">{{ importError }}</p>
+
+        <!-- Avisos de importación: personaje utilizable pero sospechoso -->
+        <div v-if="importWarnings.length > 0"
+          class="mt-3 rounded border border-amber-800/60 bg-amber-950/30 p-3 space-y-2">
+          <p class="text-amber-500 text-xs font-semibold">Importado con avisos:</p>
+          <ul class="space-y-1">
+            <li v-for="(w, i) in importWarnings" :key="i" class="text-amber-600/90 text-xs">· {{ w }}</li>
+          </ul>
+          <button @click="continuarConAvisos" class="btn-primary w-full text-xs">Continuar de todos modos →</button>
+        </div>
       </div>
 
     </div>

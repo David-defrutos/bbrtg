@@ -1,0 +1,398 @@
+<!-- Documento generado el 2026-07-05-0025 -->
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BBRTG — Ficha de personaje</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0d0d0b;
+    --surf:#18170f;
+    --surf2:#211f16;
+    --line: rgba(244,238,222,.14);
+    --line-strong: rgba(244,238,222,.30);
+    --chalk:#f4eede;
+    --mut:#9a9587;
+    --amber:#d9932e;
+    --amber-dim:#8a601f;
+    --blood:#a3372c;
+    --pitch:#3f5a3d;
+  }
+  html[data-theme="light"]{
+    --bg:#ffffff;
+    --surf:#ffffff;
+    --surf2:#f4f2ec;
+    --line: rgba(20,18,10,.22);
+    --line-strong: rgba(20,18,10,.50);
+    --chalk:#141208;
+    --mut:#55503f;
+    --amber:#8a5a15;
+    --amber-dim:#8a5a15;
+    --blood:#7a2a20;
+    --pitch:#3f5a3d;
+  }
+  html[data-theme="light"] .tile input.val{background:#fff;color:#141208}
+  html[data-theme="light"] .page{box-shadow:none;border-color:var(--line-strong)}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--chalk)}
+  body{
+    font-family:"Oswald",system-ui,sans-serif;
+    font-weight:400;
+    padding:28px 0 60px;
+    display:flex;flex-direction:column;align-items:center;gap:22px;
+  }
+  .num{font-family:"IBM Plex Mono",monospace}
+
+  /* ---------- controles de pantalla (no se imprimen) ---------- */
+  .toolbar{
+    width:794px;max-width:94vw;display:flex;justify-content:space-between;align-items:center;
+    padding:10px 4px;
+  }
+  .toolbar span{color:var(--mut);font-size:12px;letter-spacing:.04em}
+  .toolbar button{
+    font-family:"Oswald",sans-serif;font-weight:600;letter-spacing:.04em;
+    background:var(--amber);color:#181307;border:0;border-radius:3px;
+    padding:9px 18px;cursor:pointer;text-transform:uppercase;font-size:12px;
+  }
+  .toolbar button:hover{background:#eda640}
+
+  /* ---------- hoja / página ---------- */
+  .page{
+    width:794px;max-width:94vw;background:var(--surf);
+    border:.5px solid var(--line-strong);
+    box-shadow:0 10px 30px rgba(0,0,0,.5);
+    padding:26px 30px 30px;
+    position:relative;
+  }
+  .page::before{ /* raya de "línea de banda" superior */
+    content:"";position:absolute;top:0;left:0;right:0;height:5px;
+    background:repeating-linear-gradient(90deg,var(--amber) 0 22px, transparent 22px 30px);
+    opacity:.55;
+  }
+
+  /* ---------- cabecera tipo marcador ---------- */
+  .scoreboard{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    border-bottom:2px solid var(--amber);padding-bottom:10px;margin-bottom:16px;
+  }
+  .scoreboard .brand{
+    font-family:"Anton",sans-serif;font-size:30px;letter-spacing:.03em;color:var(--amber);
+    line-height:1;
+  }
+  .scoreboard .brand small{
+    display:block;font-family:"Oswald",sans-serif;font-weight:500;font-size:11px;
+    letter-spacing:.18em;color:var(--mut);margin-top:3px;text-transform:uppercase;
+  }
+  .scoreboard .rules-ver{font-size:11px;color:var(--mut);text-align:right}
+  .scoreboard .rules-ver .num{color:var(--chalk);font-size:13px}
+
+  .id-grid{
+    display:grid;grid-template-columns:2.3fr 1fr 1fr 1fr;gap:10px;margin-bottom:16px;
+  }
+  .field{display:flex;flex-direction:column;gap:3px}
+  .field label{
+    font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);
+  }
+  .field input, .field textarea{
+    background:var(--surf2);border:1px solid var(--line);color:var(--chalk);
+    font-family:"Oswald",sans-serif;font-size:13.5px;padding:6px 8px;border-radius:2px;
+    width:100%;
+  }
+  .field input:focus, .field textarea:focus{outline:1px solid var(--amber);border-color:var(--amber)}
+
+  .section-title{
+    display:flex;align-items:center;gap:10px;margin:20px 0 10px;
+  }
+  .section-title h2{
+    font-family:"Anton",sans-serif;font-weight:400;font-size:15px;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--chalk);white-space:nowrap;
+  }
+  .section-title .rule{flex:1;height:1px;background:var(--line-strong)}
+  .section-title .tag{font-size:10px;color:var(--amber-dim);letter-spacing:.08em;text-transform:uppercase}
+
+  /* ---------- tiles de atributos / habilidades ---------- */
+  .tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .tile{
+    background:var(--surf2);border:1px solid var(--line);border-radius:3px;
+    padding:8px 6px 9px;text-align:center;position:relative;
+  }
+  .tile .name{
+    font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);
+    height:22px;display:flex;align-items:center;justify-content:center;
+  }
+  .tile input.val{
+    width:44px;height:44px;margin:2px auto 6px;display:block;text-align:center;
+    background:var(--bg);border:1px solid var(--line-strong);color:var(--amber);
+    font-family:"Anton",sans-serif;font-size:22px;border-radius:3px;
+  }
+  .tile .aux{font-size:9.5px;color:var(--mut);line-height:1.5}
+  .tile .aux input{
+    width:28px;background:transparent;border:0;border-bottom:1px solid var(--line-strong);
+    color:var(--chalk);font-family:"IBM Plex Mono",monospace;font-size:10.5px;text-align:center;
+  }
+
+  /* ---------- tablas ---------- */
+  table{width:100%;border-collapse:collapse;font-size:11.5px}
+  thead th{
+    text-align:left;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--mut);border-bottom:1px solid var(--line-strong);padding:5px 6px;font-weight:500;
+  }
+  tbody td{padding:5px 6px;border-bottom:1px solid var(--line)}
+  tbody tr:nth-child(even){background:rgba(244,238,222,.02)}
+  td.center, th.center{text-align:center}
+  .ref-tables{display:grid;grid-template-columns:1fr 1.55fr;gap:16px}
+  .ref-tables .num{color:var(--amber)}
+
+  .prob-tables{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:10px}
+  .prob-tables caption{
+    text-align:left;font-size:10px;color:var(--mut);padding-bottom:5px;letter-spacing:.03em;
+  }
+  .prob-tables td, .prob-tables th{text-align:center}
+  .prob-tables th:first-child, .prob-tables td:first-child{text-align:left}
+
+  .fillable{width:100%}
+  .fillable input{
+    width:100%;background:transparent;border:0;border-bottom:1px solid var(--line);
+    color:var(--chalk);font-family:"Oswald",sans-serif;font-size:11.5px;padding:4px 2px;
+  }
+  .fillable input:focus{outline:none;border-color:var(--amber)}
+
+  textarea.notes{
+    width:100%;min-height:70px;background:var(--surf2);border:1px solid var(--line);
+    color:var(--chalk);font-family:"Oswald",sans-serif;font-size:12px;padding:8px;
+    border-radius:2px;resize:vertical;
+  }
+
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .callout{
+    background:rgba(217,147,46,.08);border:1px solid var(--amber-dim);border-radius:3px;
+    padding:8px 10px;font-size:10.5px;color:var(--mut);line-height:1.5;margin-top:8px;
+  }
+  .callout b{color:var(--amber)}
+
+  .page-footer{
+    display:flex;justify-content:space-between;margin-top:18px;padding-top:8px;
+    border-top:1px solid var(--line);font-size:9px;color:var(--mut);letter-spacing:.04em;
+  }
+
+  /* ---------- impresión ---------- */
+  @media print{
+    :root{
+      --bg:#ffffff; --surf:#ffffff; --surf2:#f4f2ec;
+      --line: rgba(20,18,10,.25); --line-strong: rgba(20,18,10,.55);
+      --chalk:#141208; --mut:#55503f; --amber:#8a5a15; --amber-dim:#8a5a15; --blood:#7a2a20;
+    }
+    body{padding:0;gap:0}
+    .toolbar{display:none}
+    .page{
+      box-shadow:none;border:0;width:auto;max-width:none;padding:14mm 14mm 16mm;
+      page-break-after:always;
+    }
+    .page:last-child{page-break-after:auto}
+    .tile input.val{background:#fff;color:#141208}
+    @page{ size:A4; margin:0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <span>BBRTG · Plantilla de ficha de personaje · v0.30</span>
+  <div style="display:flex;gap:8px">
+    <button id="theme-btn" onclick="toggleTheme()">Modo claro</button>
+    <button onclick="window.print()">Imprimir / Guardar PDF</button>
+  </div>
+</div>
+<script>
+  function toggleTheme(){
+    var html = document.documentElement;
+    var light = html.getAttribute('data-theme') === 'light';
+    html.setAttribute('data-theme', light ? 'dark' : 'light');
+    document.getElementById('theme-btn').textContent = light ? 'Modo claro' : 'Modo oscuro';
+  }
+</script>
+
+<!-- ============================= PÁGINA 1 ============================= -->
+<div class="page">
+
+  <div class="scoreboard">
+    <div class="brand">BBRTG<small>Blood Bowl: Rise to Glory — ficha de personaje</small></div>
+    <div class="rules-ver">Reglas<br><span class="num">v0.30</span></div>
+  </div>
+
+  <div class="id-grid">
+    <div class="field"><label>Nombre del personaje</label><input type="text"></div>
+    <div class="field"><label>Raza</label><input type="text"></div>
+    <div class="field"><label>Nivel</label><input type="text"></div>
+    <div class="field"><label>Jugador (persona)</label><input type="text"></div>
+    <div class="field"><label>Equipo</label><input type="text"></div>
+    <div class="field"><label>Dios</label><input type="text"></div>
+    <div class="field"><label>Nº de dorsal</label><input type="text"></div>
+  </div>
+
+  <div class="section-title"><h2>Atributos</h2><div class="rule"></div><span class="tag">máx. natural según nivel</span></div>
+  <div class="tiles">
+    <div class="tile"><div class="name">Movimiento</div><input class="val" type="text"><div class="aux">dados <input type="text" placeholder="_"> d10</div></div>
+    <div class="tile"><div class="name">Fuerza</div><input class="val" type="text"><div class="aux">dados <input type="text" placeholder="_"> d10</div></div>
+    <div class="tile"><div class="name">Agilidad</div><input class="val" type="text"><div class="aux">dados <input type="text" placeholder="_"> d10</div></div>
+    <div class="tile"><div class="name">Técnica</div><input class="val" type="text"><div class="aux">dados <input type="text" placeholder="_"> d10</div></div>
+    <div class="tile"><div class="name">Resistencia</div><input class="val" type="text"><div class="aux">dados <input type="text" placeholder="_"> d10</div></div>
+    <div class="tile"><div class="name">Mente</div><input class="val" type="text"><div class="aux">dados <input type="text" placeholder="_"> d10</div></div>
+  </div>
+
+  <div class="section-title"><h2>Habilidades</h2><div class="rule"></div><span class="tag">ligadas a un atributo</span></div>
+  <div class="tiles">
+    <div class="tile"><div class="name">Correr (Mov)</div><input class="val" type="text"><div class="aux">≥<input type="text" placeholder="_">&nbsp;+<input type="text" placeholder="_">r&nbsp;d<input type="text" placeholder="_"></div></div>
+    <div class="tile"><div class="name">Placar (Fue)</div><input class="val" type="text"><div class="aux">≥<input type="text" placeholder="_">&nbsp;+<input type="text" placeholder="_">r&nbsp;d<input type="text" placeholder="_"></div></div>
+    <div class="tile"><div class="name">Evasión (Agi)</div><input class="val" type="text"><div class="aux">≥<input type="text" placeholder="_">&nbsp;+<input type="text" placeholder="_">r&nbsp;d<input type="text" placeholder="_"></div></div>
+    <div class="tile"><div class="name">Balón (Tec)</div><input class="val" type="text"><div class="aux">≥<input type="text" placeholder="_">&nbsp;+<input type="text" placeholder="_">r&nbsp;d<input type="text" placeholder="_"></div></div>
+    <div class="tile"><div class="name">Aguantar (Res)</div><input class="val" type="text"><div class="aux">≥<input type="text" placeholder="_">&nbsp;+<input type="text" placeholder="_">r&nbsp;d<input type="text" placeholder="_"></div></div>
+    <div class="tile"><div class="name">Voluntad (Men)</div><input class="val" type="text"><div class="aux">≥<input type="text" placeholder="_">&nbsp;+<input type="text" placeholder="_">r&nbsp;d<input type="text" placeholder="_"></div></div>
+  </div>
+  <div class="callout"><b>Cómo rellenar «dados» y «≥ / +r / d»:</b> consulta las dos tablas de referencia de abajo con el valor de cada atributo y habilidad, y anota aquí el resultado. No hace falta recalcular nada en mesa.</div>
+
+  <div class="section-title"><h2>Tablas de referencia</h2><div class="rule"></div></div>
+  <div class="ref-tables">
+    <table>
+      <thead><tr><th>Atributo</th><th class="center">Dados</th></tr></thead>
+      <tbody>
+        <tr><td>1 – 2</td><td class="center num">1d10</td></tr>
+        <tr><td>3 – 4</td><td class="center num">2d10</td></tr>
+        <tr><td>5 – 6</td><td class="center num">3d10</td></tr>
+        <tr><td>7 – 8</td><td class="center num">4d10</td></tr>
+        <tr><td>9 – 10</td><td class="center num">5d10</td></tr>
+        <tr><td>11 – 12</td><td class="center num">6d10</td></tr>
+        <tr><td>13 – 14</td><td class="center num">7d10</td></tr>
+        <tr><td>15 – 16</td><td class="center num">8d10</td></tr>
+        <tr><td>17 – 18</td><td class="center num">9d10</td></tr>
+        <tr><td>19 – 20</td><td class="center num">10d10</td></tr>
+      </tbody>
+    </table>
+    <table>
+      <thead><tr><th>Habilidad</th><th class="center">Umbral</th><th class="center">Rerolls</th><th class="center">Dado aux.</th></tr></thead>
+      <tbody>
+        <tr><td class="num">0</td><td class="center num">≥10</td><td class="center num">—</td><td class="center num">—</td></tr>
+        <tr><td class="num">1</td><td class="center num">≥9</td><td class="center num">—</td><td class="center num">—</td></tr>
+        <tr><td class="num">2</td><td class="center num">≥9</td><td class="center num">1</td><td class="center num">—</td></tr>
+        <tr><td class="num">3</td><td class="center num">≥8</td><td class="center num">1</td><td class="center num">—</td></tr>
+        <tr><td class="num">4</td><td class="center num">≥8</td><td class="center num">1</td><td class="center num">d3</td></tr>
+        <tr><td class="num">5</td><td class="center num">≥8</td><td class="center num">1</td><td class="center num">d4</td></tr>
+        <tr><td class="num">6</td><td class="center num">≥8</td><td class="center num">1</td><td class="center num">d5</td></tr>
+        <tr><td class="num">7</td><td class="center num">≥7</td><td class="center num">1</td><td class="center num">d5</td></tr>
+        <tr><td class="num">8</td><td class="center num">≥7</td><td class="center num">1</td><td class="center num">d6</td></tr>
+        <tr><td class="num">9</td><td class="center num">≥7</td><td class="center num">2</td><td class="center num">d6</td></tr>
+        <tr><td class="num">10</td><td class="center num">≥7</td><td class="center num">2</td><td class="center num">d8</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-title"><h2>Probabilidad por acción</h2><div class="rule"></div><span class="tag">específica de este personaje — sin rellenar</span></div>
+  <table class="fillable prob-actions">
+    <thead><tr>
+      <th style="width:19%">Acción</th><th style="width:13%">Atributo · Hab.</th>
+      <th class="center">Fácil (1)</th><th class="center">Normal (2)</th><th class="center">Difícil (3)</th>
+      <th class="center">Muy difícil (4)</th><th class="center">Legendaria (5)</th><th class="center">Imposible (6+)</th>
+    </tr></thead>
+    <tbody>
+      <tr><td>Aguantar golpe</td><td class="num">Res · Aguantar</td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td></tr>
+      <tr><td>Balón: coger</td><td class="num">Tec · J. balón</td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td></tr>
+      <tr><td>Balón: interceptar</td><td class="num">Tec · J. balón</td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td></tr>
+      <tr><td>Balón: lanzar</td><td class="num">Tec · J. balón</td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td></tr>
+      <tr><td>Balón: recepción</td><td class="num">Tec · J. balón</td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td></tr>
+      <tr><td>Balón: robar</td><td class="num">Tec · J. balón</td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td></tr>
+      <tr><td>Esprintar</td><td class="num">Mov · Correr</td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td></tr>
+      <tr><td>Esquivar</td><td class="num">Agi · Evasión</td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td></tr>
+      <tr><td>Placar</td><td class="num">Fue · Placar</td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td></tr>
+      <tr><td>Rezar / voluntad</td><td class="num">Men · Voluntad</td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td></tr>
+    </tbody>
+  </table>
+  <div class="callout">Esta tabla se rellena a mano solo si el programa aún no exporta la ficha completa. Cuando la exportación esté lista, estos porcentajes salen ya calculados para los atributos y habilidades reales de este personaje — no son valores genéricos de dados × umbral.</div>
+
+  <div class="page-footer"><span>BBRTG — Rise to Glory</span><span>Página 1 / 2 — Atributos, habilidades y tiradas</span></div>
+</div>
+
+<!-- ============================= PÁGINA 2 ============================= -->
+<div class="page">
+
+  <div class="scoreboard">
+    <div class="brand" style="font-size:20px">DOTES · DIOS · EQUIPO<small>continuación de la ficha</small></div>
+    <div class="rules-ver">Nombre<br><span class="num">___________</span></div>
+  </div>
+
+  <div class="section-title"><h2>Dotes</h2><div class="rule"></div><span class="tag">racial + elegidas, todas en una lista</span></div>
+  <table class="fillable">
+    <thead><tr><th style="width:28%">Dote</th><th style="width:22%">Cadena</th><th style="width:9%" class="center">Nivel</th><th>Efecto (resumen)</th></tr></thead>
+    <tbody>
+      <tr><td><input placeholder="(racial)"></td><td><input></td><td class="center"><input value="1"></td><td><input></td></tr>
+      <tr><td><input></td><td><input></td><td class="center"><input></td><td><input></td></tr>
+      <tr><td><input></td><td><input></td><td class="center"><input></td><td><input></td></tr>
+      <tr><td><input></td><td><input></td><td class="center"><input></td><td><input></td></tr>
+      <tr><td><input></td><td><input></td><td class="center"><input></td><td><input></td></tr>
+      <tr><td><input></td><td><input></td><td class="center"><input></td><td><input></td></tr>
+      <tr><td><input></td><td><input></td><td class="center"><input></td><td><input></td></tr>
+      <tr><td><input></td><td><input></td><td class="center"><input></td><td><input></td></tr>
+    </tbody>
+  </table>
+
+  <div class="split">
+    <div>
+      <div class="section-title"><h2>Dios y favor</h2><div class="rule"></div></div>
+      <div class="id-grid" style="grid-template-columns:1fr 1fr">
+        <div class="field"><label>Dios venerado</label><input type="text"></div>
+        <div class="field"><label>Favor actual</label><input type="text"></div>
+        <div class="field"><label>Atributos de rezo</label><input type="text"></div>
+        <div class="field"><label>Habilidad de rezo</label><input type="text"></div>
+      </div>
+      <table style="margin-top:8px">
+        <thead><tr><th>Dones recibidos</th><th style="width:26%" class="center">Nivel</th></tr></thead>
+        <tbody>
+          <tr><td class="fillable"><input></td><td class="center"><input></td></tr>
+          <tr><td class="fillable"><input></td><td class="center"><input></td></tr>
+          <tr><td class="fillable"><input></td><td class="center"><input></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div class="section-title"><h2>Equipo y objetos</h2><div class="rule"></div></div>
+      <table>
+        <thead><tr><th>Objeto</th><th style="width:34%">Efecto / notas</th></tr></thead>
+        <tbody>
+          <tr><td class="fillable"><input></td><td class="fillable"><input></td></tr>
+          <tr><td class="fillable"><input></td><td class="fillable"><input></td></tr>
+          <tr><td class="fillable"><input></td><td class="fillable"><input></td></tr>
+          <tr><td class="fillable"><input></td><td class="fillable"><input></td></tr>
+          <tr><td class="fillable"><input></td><td class="fillable"><input></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section-title"><h2>Historial de partidos</h2><div class="rule"></div></div>
+  <table class="fillable">
+    <thead><tr>
+      <th style="width:9%">Fecha</th><th style="width:20%">Rival</th><th style="width:10%" class="center">Resultado</th>
+      <th style="width:8%" class="center">TDs</th><th style="width:8%" class="center">Bajas causa.</th>
+      <th style="width:8%" class="center">Bajas sufr.</th><th style="width:8%" class="center">MVP</th><th>Notas</th>
+    </tr></thead>
+    <tbody>
+      <tr><td><input></td><td><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td><input></td></tr>
+      <tr><td><input></td><td><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td><input></td></tr>
+      <tr><td><input></td><td><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td><input></td></tr>
+      <tr><td><input></td><td><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td><input></td></tr>
+      <tr><td><input></td><td><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td><input></td></tr>
+      <tr><td><input></td><td><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td class="center"><input></td><td><input></td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-title"><h2>Notas</h2><div class="rule"></div></div>
+  <textarea class="notes" placeholder="Lesiones, rivalidades, objetivos narrativos, decisiones pendientes…"></textarea>
+
+  <div class="page-footer"><span>BBRTG — Rise to Glory</span><span>Página 2 / 2 — Dotes, dios, equipo e historial</span></div>
+</div>
+
+</body>
+</html>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Documento generado el 2026-07-04-2230
+// Documento generado el 2026-07-05-1655
 import { computed } from 'vue'
 import { useUiStore } from '@/stores/ui'
 import { useCharacterStore } from '@/stores/character'
@@ -10,9 +10,14 @@ import StepHabilidades from '@/components/StepHabilidades.vue'
 import StepDotes     from '@/components/StepDotes.vue'
 import StepDios      from '@/components/StepDios.vue'
 import StepPlan      from '@/components/StepPlan.vue'
+import StepFicha     from '@/components/StepFicha.vue'
 
 const ui   = useUiStore()
 const char = useCharacterStore()
+
+// El paso se persiste; si quedó apuntando a un paso sin personaje detrás
+// (p. ej. localStorage borrado a medias), vuelve a inicio en vez de romper.
+if (!char.character && ui.step !== 'inicio') ui.goTo('inicio')
 
 const STEP_LABELS: Record<string, string> = {
   raza: 'Raza', atributos: 'Atributos', habilidades: 'Habilidades',
@@ -77,8 +82,27 @@ function toggleTheme() {
       <StepDotes      v-else-if="ui.step === 'dotes'"  />
       <StepDios       v-else-if="ui.step === 'dios'"   />
       <StepPlan       v-else-if="ui.step === 'plan'"   />
+      <StepFicha      v-else-if="ui.step === 'ficha'"  />
       <div v-else class="p-8 text-stone-500">Paso desconocido: {{ ui.step }}</div>
     </main>
+
+    <!-- ── Toast de deshacer (última operación destructiva) ─────────────── -->
+    <div
+      v-if="char.undoBuffer"
+      class="fixed bottom-4 right-4 z-50 flex items-center gap-3 rounded-lg border border-stone-700
+             bg-stone-900 px-4 py-2.5 shadow-lg shadow-black/40"
+    >
+      <span class="text-stone-400 text-sm">{{ char.undoBuffer.label }}</span>
+      <button
+        class="text-amber-400 hover:text-amber-300 text-sm font-semibold transition-colors"
+        @click="char.undo()"
+      >↶ Deshacer</button>
+      <button
+        class="text-stone-600 hover:text-stone-400 text-sm transition-colors"
+        title="Descartar (no se podrá deshacer)"
+        @click="char.clearUndo()"
+      >✕</button>
+    </div>
 
   </div>
 </template>

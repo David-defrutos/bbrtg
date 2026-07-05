@@ -1,8 +1,9 @@
 # Dependencies
 node_modules/
 
-# Build output (docs/ is committed for GitHub Pages)
+# Build output (docs/ lo genera el CI en cada deploy; los fuentes viven en public/)
 dist/
+docs/
 
 # IDE
 .vscode/

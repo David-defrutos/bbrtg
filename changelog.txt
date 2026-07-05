@@ -1,6 +1,167 @@
 ﻿# changelog Blood Bowl: Rise to Glory
 
 ---
+2026-07-05 17:42 · #10 — Importar JSON desde el plan y aviso «primero habilidad» en selects apagados
+Causa: dos mejoras UX pequeñas del backlog: cargar otro personaje obligaba a
+  resetear y pasar por inicio; los selects de atributo/dote/dios apagados hasta
+  elegir habilidad no explicaban por qué.
+Arreglo:
+  P1) Botón «↑ JSON» en la cabecera del plan (input file oculto): importa con
+      la misma validación de parseCharacterJSON; banner rojo si se rechaza,
+      ámbar con la lista de avisos si entra con reparos. importJSON en el store
+      hace snapshot antes de sustituir → la importación es deshacible (toast),
+      también la de inicio.
+  P2) title «Elige primero la habilidad del nivel N» en los selects apagados
+      de atributo, dote y dios (y en el div contenedor del atributo).
+Ficheros tocados: src/stores/character.ts, src/components/StepPlan.vue.
+Tests: 96 / 96 verdes.
+
+---
+2026-07-05 17:36 · #9 — F5 sin pérdidas en el asistente y UI de notas
+Causa: siguientes dos mejoras pequeñas del backlog UX (persistir borrador; el
+  campo notas existía en modelo, store y ficha impresa pero ningún componente
+  lo exponía).
+Arreglo:
+  P1) wizardDraft entra en el persist del store character y el store ui
+      persiste step + nivelVista: un F5 a mitad de la creación vuelve al mismo
+      paso con el reparto intacto. Guardia en App.vue: si el paso persistido
+      apunta a un paso sin personaje detrás, vuelve a inicio en vez de romper.
+  P2) Sección «Notas» en el panel del plan (textarea ligado a setNotas, aviso
+      de que aparece en la ficha impresa — sheet.ts ya la pintaba).
+Ficheros tocados: src/stores/character.ts, src/stores/ui.ts, src/App.vue,
+  src/components/StepPlan.vue.
+Tests: 96 / 96 verdes (sin tests nuevos: persistencia y UI).
+
+---
+2026-07-05 17:00 · #8 — Protección anti-pérdida (confirmar + deshacer), gate de tests en CI, docs/ sin trackear, bandas y badges en el plan
+Causa: paquete recomendado tras revisión de UX/UI/técnica de la sesión
+  (mejoras 1, 2, 7-CI, 18-repo y 13 de la lista propuesta).
+Arreglo:
+  P1) Reiniciar (StepPlan) y «Nuevo personaje» (StepInicio) ya no destruyen sin
+      avisar: confirmación + descarga automática del JSON antes de resetear;
+      Reiniciar además navega a inicio (antes dejaba el plan huérfano en
+      pantalla). reset() sin uso directo desde la UI.
+  P2) Buffer de deshacer (1 paso, solo memoria) en el store: snapshot antes de
+      reset() y replanFrom(); toast global en App.vue con «↶ Deshacer» y
+      descartar. No se persiste (un F5 lo pierde; de ahí la copia JSON de P1).
+  P3) CI: paso «npm test» antes del build en deploy.yaml — un push con tests
+      rotos ya no se publica.
+  P4) docs/ fuera de git (git rm --cached + .gitignore): el workflow lo
+      construye y sube él mismo; los artefactos commiteados no se usaban y
+      ensuciaban cada diff. Los fuentes siguen en public/.
+  P5) StepPlan: separadores por banda de máximos (leídos de LEVEL_CAPS, con
+      «atributo ≤ N · habilidad ≤ M») y badges por nivel según LEVEL_CALENDAR
+      (A verde = +atributo, D ámbar = dote, ★ = legendaria); columna Nv. más
+      ancha para alojarlos.
+Ficheros tocados: src/stores/character.ts, src/App.vue,
+  src/components/StepPlan.vue, StepInicio.vue, .github/workflows/deploy.yaml,
+  .gitignore.
+Tests: 96 / 96 verdes (sin tests nuevos: cambios de UI/CI/repo).
+
+---
+2026-07-05 11:10 · #7 — Mejoras 1-5: ficha en app, equipo + atributo efectivo, import validado, probabilidades en vivo, replanear desde la UI
+Causa: 5 primeras mejoras acordadas tras revisión del programa contra el manual.
+Arreglo:
+  M1) StepFicha.vue: la ficha imprimible se ve DENTRO de la app (iframe srcdoc
+      con buildSheetHTML al nivelActual) con Imprimir/Descargar/Volver; paso
+      'ficha' ya existía en ui.ts. Botón «🖨 Ficha» en StepPlan.
+  M2) src/data/equipment.ts: catálogo completo §18.7-18.12 (40 objetos: 24
+      consumibles, 8 equipo común, 8 bueno, 8 raros/mágicos). Efecto = texto;
+      único dato ejecutable attrBonus (Guantelete +1 Fue, Botas de Viento +1 Mov).
+      Character.equipo?: string[] (no es parte del plan). effectiveAttrs() en
+      helpers: base + objetos, señala >20 en overCap sin clampar; prereqs de
+      dotes siguen contra atributo BASE (el equipo es retirable). Dados y
+      probabilidades usan el efectivo (§4.3). Gestión de equipo en el panel
+      del plan (añadir/quitar con tooltip de efecto); la ficha exportada lista
+      el equipo con efectos y muestra efectivo (base).
+  M3) src/rules/parseCharacter.ts: importación validada. Errores duros (JSON
+      ilegible, no-objeto, schemaVersion ausente/incompatible, raza desconocida,
+      plan con niveles inválidos/duplicados) y avisos (rulesVersion distinta,
+      sin nivel 1, sin nombre, nivelActual raro, equipo desconocido) — señalar,
+      nunca arreglar en silencio. StepInicio muestra el error legible y un
+      panel ámbar de avisos con «Continuar de todos modos».
+  M4) Panel del plan: tabla plegable de probabilidades en vivo (10 acciones ×
+      6 dificultades, atributo efectivo, color por valor). Badge en subidas de
+      atributo: verde «+1d10» si añade dado, gris «=» si no (par→impar, §7.3).
+  M5) Botón ✂ por fila («replanear desde aquí», con confirmación; ajusta
+      nivelActual si quedaba por encima) y ✎ en nivel 1 («editar creación»):
+      beginEditLevel1 siembra wizardDraft desde plan[0] y vuelve al wizard sin
+      perder el resto del plan (commitLevel1 solo reemplaza el nivel 1).
+Ficheros tocados: src/data/equipment.ts (nuevo), src/rules/types.ts, helpers.ts,
+  parseCharacter.ts (nuevo), src/stores/character.ts, src/export/sheet.ts,
+  src/components/StepFicha.vue (nuevo), StepPlan.vue, StepInicio.vue, src/App.vue,
+  src/rules/parseCharacter.test.ts (nuevo), src/export/sheet.test.ts.
+Tests: 96 / 96 verdes (78 previos + 18 nuevos: parseCharacterJSON, effectiveAttrs,
+  ficha con equipo y efectivo).
+
+---
+2026-07-05 10:10 · #6 — Regla confirmada: los fallos de una explosión se repiten; manuales a public/manuales
+Causa: con el manual v0.30 ya en el repo se contrastó el motor de probabilidades.
+  Todo coincide (§4.3, §4.5, §4.6, §8.7/§16.2, §16.3, §7.2) salvo una suposición:
+  el autor confirma que los d10 extra de una explosión que fallan SÍ pueden
+  repetirse (se tratan como dados fallidos normales; por coherencia también son
+  candidatos al dado auxiliar).
+Arreglo: probability.ts remodelado — la distribución por dado ahora es conjunta
+  (éxitos de la cadena, ¿deja un dado fallido en mesa?): cada cadena termina en
+  éxito o en un fallo repetible. El nº de fallos deja de ser Binomial(n, pFail)
+  y se calcula por programación dinámica dado a dado. La fase de rescate
+  (repeticiones sin explosión + dado auxiliar al mejor fallo) no cambia.
+  Oráculo del test actualizado (enumera las cadenas cara a cara y sus fallos
+  terminales); nuevo valor a mano: 1d10 hab.2 → P(≥2) = 0.036 (antes 0.02).
+  Además: mi build anterior había borrado docs/ficha-personaje-plantilla.html
+  (Vite vacía outDir docs/ en cada build); restaurada, y David movió manuales y
+  plantilla a public/manuales/ (fuente canónica que cada build copia a docs/).
+Ficheros tocados: src/rules/probability.ts, src/rules/probability.test.ts,
+  docs/ficha-personaje-plantilla.html (restaurada; ahora vive en public/manuales).
+Tests: 78 / 78 verdes (motor validado de nuevo contra el oráculo y a mano).
+
+---
+2026-07-05 09:35 · #5 — Fix pool de atributos + tooltips + cadena de dotes + detalle de errores + ficha HTML con probabilidades
+Causa (6 encargos):
+  1) Bug: en StepAtributos/StepHabilidades, al reasignar un valor sobre un slot ya
+     ocupado, assignOrUnassign hacía push(prev)+sort ANTES del splice por índice
+     guardado; el índice quedaba desfasado y se eliminaba el chip equivocado
+     (el 5 se duplicaba, el 4 desaparecía). Además el borrador del wizard no
+     persistía asignaciones parciales.
+  2) El wizardDraft arrancaba con valores preasignados (defaultAttrs/defaultSkills).
+  3) Sin ayuda contextual en atributos/habilidades/razas.
+  4) Al elegir dote no se veía el siguiente paso de su cadena.
+  5) El banner del plan solo decía "N error(es)" sin detalle.
+  6) La exportación era solo JSON mínimo.
+Arreglo:
+  1) Nuevo src/rules/pool.ts: remainingPool/isValidAssignment. El pool se DERIVA
+     como diferencia multiconjunto de lo asignado (computed) y no puede corromperse.
+     Cada cambio se persiste en wizardDraft (0 = sin asignar).
+  2) defaultAttrs/defaultSkills a ceros; los pasos restauran solo borradores válidos.
+  3) desc añadida a ATTR_DEFS/SKILL_DEFS (config.ts) y RACES (races.ts); tooltips
+     (title + subrayado punteado) en StepAtributos, StepHabilidades, StepRaza y
+     panel de StepPlan.
+  4) StepDotes muestra la(s) dote(s) del tier siguiente de la cadena con sus
+     prereqs legibles y el nivel mínimo alcanzable (helpers nuevos: describePrereq,
+     featSlotLevels, minLevelForFeatConds — derivado de LEVEL_CAPS + calendario).
+  5) Banner de StepPlan expandible: lista cada error con nivel (clic → panel),
+     campo y mensaje.
+  6) Ficha completa imprimible: src/export/sheet.ts (HTML autocontenido + print
+     CSS, secciones de la plantilla docs/ficha-personaje-plantilla.html) con tabla
+     de PROBABILIDAD POR ACCIÓN × DIFICULTAD calculada para el personaje.
+     Motor exacto nuevo src/rules/probability.ts (convoluciones, sin simulación):
+     explosión de 10s naturales en cadena, repeticiones de fallidos (sin explotar),
+     dado auxiliar sumado al mejor fallido (política de juego óptimo documentada);
+     la fila Rezar usa el mejor rezarAttr del dios + su rezarSkill (Men·Voluntad
+     sin dios). Datos nuevos: DIFFICULTY_TABLE (tables.ts) y ACTIONS (actions.ts).
+     Botones "Ficha HTML" + "JSON" en StepPlan; triggerSheetDownload en el store.
+  Semántica de tirada confirmada con el autor (manual no está en el repo);
+  suposición documentada: los dados extra de explosión no se repiten ni reciben aux.
+Ficheros tocados: src/rules/pool.ts (nuevo), probability.ts (nuevo), helpers.ts,
+  src/export/sheet.ts (nuevo), src/data/config.ts, races.ts, tables.ts,
+  actions.ts (nuevo), src/stores/character.ts, src/components/StepAtributos.vue,
+  StepHabilidades.vue, StepRaza.vue, StepDotes.vue, StepPlan.vue,
+  src/rules/pool.test.ts (nuevo), probability.test.ts (nuevo),
+  src/export/sheet.test.ts (nuevo).
+Tests: 80 / 80 verdes (31 previos + 49 nuevos; motor de probabilidades validado
+  contra oráculo independiente de enumeración exhaustiva y valores a mano).
+
+---
 2026-07-04 22:48 · #4 — Fase 4: UI wizard completa (creación + plan + ficha)
 Causa: aplicación sin interfaz; solo existía el motor puro.
 Arreglo: 7 componentes Vue + 2 Pinia stores completos.

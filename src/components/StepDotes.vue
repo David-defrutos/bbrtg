@@ -4,7 +4,8 @@ import { ref, computed } from 'vue'
 import { useUiStore } from '@/stores/ui'
 import { useCharacterStore } from '@/stores/character'
 import { FEATS } from '@/data/feats'
-import { checkPrereq } from '@/rules/helpers'
+import type { FeatData } from '@/data/feats'
+import { checkPrereq, describePrereq, featSlotLevels, minLevelForFeatConds } from '@/rules/helpers'
 import type { CharState } from '@/rules/types'
 
 const ui   = useUiStore()
@@ -45,6 +46,27 @@ const filtered = computed(() => {
 })
 
 const selected = computed(() => FEATS.find(f => f.id === selectedId.value) ?? null)
+
+// Siguiente(s) dote(s) de la cadena de la seleccionada (puede haber ramas)
+const nextInChain = computed((): FeatData[] => {
+  if (!selected.value) return []
+  return FEATS.filter(f => f.chain === selected.value!.chain && f.tier === selected.value!.tier + 1)
+})
+
+/**
+ * Nivel mínimo al que podrá ganarse una dote de la cadena: el primer nivel
+ * con hueco de dote (calendario) posterior al nivel 1 en el que sus prereqs
+ * de atributo/habilidad sean alcanzables para la raza. null = inalcanzable.
+ */
+function earliestLevelFor(feat: FeatData): number | null {
+  if (!char.raza) return null
+  const condLvl = minLevelForFeatConds(feat, char.raza)
+  return featSlotLevels().find(l => l > 1 && l >= condLvl) ?? null
+}
+
+function prereqText(feat: FeatData): string {
+  return feat.prereqs.map(describePrereq).join(' · ')
+}
 
 function siguiente() {
   if (!selectedId.value) return
@@ -108,7 +130,26 @@ function siguiente() {
               <span class="text-stone-400 text-xs">{{ selected.limit }}</span>
             </div>
             <div v-if="selected.prereqs.length > 0" class="text-xs text-stone-600">
-              Prereqs: {{ selected.prereqs.length }} condición(es) — todas cumplidas ✓
+              Prereqs: {{ prereqText(selected) }} — todas cumplidas ✓
+            </div>
+
+            <!-- Siguiente dote de la cadena (planificación) -->
+            <div v-if="nextInChain.length > 0"
+              class="mt-4 rounded border border-amber-900/40 bg-amber-950/20 p-3 space-y-2">
+              <p class="text-amber-600 text-xs font-semibold uppercase tracking-wide">
+                Cadena «{{ selected.chain }}» — siguiente paso
+              </p>
+              <div v-for="nf in nextInChain" :key="nf.id" class="text-xs">
+                <span class="text-stone-200 font-medium">{{ nf.name }}</span>
+                <span class="text-stone-500"> (tier {{ nf.tier }})</span>
+                <span v-if="earliestLevelFor(nf) !== null" class="text-amber-500">
+                  · alcanzable desde nivel {{ earliestLevelFor(nf) }}</span>
+                <span v-else class="text-red-400"> · inalcanzable para tu raza</span>
+                <div class="text-stone-500 mt-0.5">Requiere: {{ prereqText(nf) || '—' }}</div>
+              </div>
+            </div>
+            <div v-else class="mt-4 text-xs text-stone-600 italic">
+              Última dote de su cadena.
             </div>
           </div>
         </template>

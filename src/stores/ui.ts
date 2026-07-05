@@ -1,4 +1,4 @@
-// Documento generado el 2026-07-04-2230
+// Documento generado el 2026-07-05-1710
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
@@ -24,4 +24,7 @@ export const useUiStore = defineStore('ui', () => {
   function setNivelVista(n: number) { nivelVista.value = Math.max(1, Math.min(30, n)) }
 
   return { step, nivelVista, WIZARD_STEPS, goTo, next, back, setNivelVista }
+}, {
+  // Un F5 vuelve al mismo paso y nivel de vista (junto al wizardDraft persistido)
+  persist: { pick: ['step', 'nivelVista'] },
 })
